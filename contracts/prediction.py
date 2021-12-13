@@ -69,7 +69,7 @@ def create_bet(account: str, secret_key: str, bet: Bet):
 
 def make_bet(account: str, secret_key: str, bet: Bet):
   signed_transaction = create_bet(account=account, secret_key=secret_key, bet=bet)
-  # return web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+  return web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
 
 
 def get_claimable_epochs(account: str):
@@ -105,7 +105,6 @@ def claim(account: str, secret_key: str):
     })
     gas = web3.eth.estimate_gas(transaction)
     transaction.update({ 'gas' : gas })
-
     signed_transaction =  web3.eth.account.sign_transaction(transaction, secret_key)
     web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
     return claimable_epochs

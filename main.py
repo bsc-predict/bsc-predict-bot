@@ -1,7 +1,6 @@
 import argparse
 from dotenv import load_dotenv
 import os
-from importlib import import_module
 import strategies
 
 if __name__ == "__main__":
@@ -32,24 +31,34 @@ if __name__ == "__main__":
     default=0,
     help="The minimum balance of your account before the bot stops playing",
   )
+  parser.add_argument(
+    '--dry',
+    dest='dry',
+    action='store_true',
+    required=False,
+    default=False,
+    help="Dry run",
+  )
 
 
   SECRET_KEY = os.getenv('SECRET_KEY')
   ACCOUNT = os.getenv('ACCOUNT')
-  if (SECRET_KEY is None):
-    raise Exception("SECRET_KEY is not defined in .env")
-  elif (ACCOUNT is None):
-    raise Exception("ACCOUNT is not defined in .env")
 
   args = parser.parse_args()
   strategy = args.strategy
   bet_size_eth = args.size_eth
   min_balance_eth = max(0, args.min_balance_eth)
+
+  if (SECRET_KEY is None and not args.dry):
+    raise Exception("SECRET_KEY is not defined in .env")
+  elif (ACCOUNT is None and not args.dry):
+    raise Exception("ACCOUNT is not defined in .env")
+
   
   __import__(f'strategies.{strategy}', locals(), globals())
   import strategies
 
   bot = getattr(strategies, strategy)
-  bot = bot.Bot(account=ACCOUNT, secret_key=SECRET_KEY, bet_size_eth=bet_size_eth, min_balance_eth=min_balance_eth)
+  bot = bot.Bot(dry=args.dry, account=ACCOUNT, secret_key=SECRET_KEY, bet_size_eth=bet_size_eth, min_balance_eth=min_balance_eth)
   bot.run()
 

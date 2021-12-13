@@ -1,8 +1,8 @@
 from contracts.oracle import get_latest_oracle_data, get_oracle_history
 from config import Config
 from classes.RoundClass import Round
-from contracts.prediction import claim, get_current_epoch, get_history, get_round, create_bet, make_bet
-from typing import Optional, Union, List
+from contracts.prediction import claim, get_current_epoch, get_history, get_round,  make_bet
+from typing import Optional
 from classes.BetClass import Bet
 from time import sleep
 import logging
@@ -18,6 +18,7 @@ class BaseBot:
     secret_key: str,
     bet_size_eth: float,
     min_balance_eth: float,
+    dry: bool = False
   ):
     self.last_claim = 0
     self.history = get_history()
@@ -29,6 +30,7 @@ class BaseBot:
     self.secret_key = secret_key
     self.min_balance_eth = min_balance_eth
     self.bet_size_eth = bet_size_eth
+    self.dry = dry
     logging.info(f"Created bot {__class__}")
   
   def __update_rounds(self):
@@ -41,7 +43,7 @@ class BaseBot:
   def __update_oracle(self):
     last_oracle = max([o.roundId for o in self.oracle_history])
     update = get_latest_oracle_data(last_oracle)
-    self.history = self.history + update
+    self.oracle_history = self.oracle_history + update
 
   def __get_bettable_round(self) -> Optional[Round]:
     if len(self.history) == 0:
@@ -61,10 +63,10 @@ class BaseBot:
     while True:
       now = time.time()
       since_last_claim_attempt = now - self.last_claim
-      if since_last_claim_attempt >= 300:
+      if since_last_claim_attempt >= 300 and not self.dry:
         self.last_claim = now
         try:
-          claimed = claim(self.account, self.secret_key)
+          claimed = claim(account=self.account, secret_key=self.secret_key)
           if len(claimed) > 0:
             logging.info(f"Claimed epochs {claimed}")
         except Exception as e:
@@ -78,8 +80,9 @@ class BaseBot:
           logging.info(f"Making bet {bet}")
           self.epochs_bet.add(bettable_round.epoch)
           try:
-            logging.info(f"Making bet {bet}")
-            make_bet(account=self.account, secret_key=self.secret_key, bet=bet )
+            if not self.dry:
+              make_bet(account=self.account, secret_key=self.secret_key, bet=bet, dry=self.dry )
+            logging.info("Bet success")
           except Exception as e:
             logging.error("Bet failed", e)
         sleep(Config.sleep_seconds)
