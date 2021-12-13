@@ -33,10 +33,10 @@ class Bot(BaseBot):
     prior = last_oracles[0]
     for o in last_oracles[1:]:
       # oracle is lower than the prior, so not bullish
-      if o.answer < prior:
+      if o.answer < prior.answer:
         bullish = False
       # oracle is greater than the prior, so not bearish
-      elif o.answer > prior:
+      elif o.answer > prior.answer:
         bearish = False
       prior = o
 
