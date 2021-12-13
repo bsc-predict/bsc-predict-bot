@@ -81,7 +81,7 @@ class BaseBot:
           self.epochs_bet.add(bettable_round.epoch)
           try:
             if not self.dry:
-              make_bet(account=self.account, secret_key=self.secret_key, bet=bet, dry=self.dry )
+              make_bet(account=self.account, secret_key=self.secret_key, bet=bet )
             logging.info("Bet success")
           except Exception as e:
             logging.error("Bet failed", e)
